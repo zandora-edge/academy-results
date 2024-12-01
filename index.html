@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Results Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .alert {
+            margin-top: 15px;
+            color: red;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .modal.active {
+            display: block;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .modal table th, .modal table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .modal table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .modal-footer {
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .btn-close {
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            background-color: #e53935;
+        }
+
+        .status.pass {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status.failed {
+            color: red;
+            font-weight: bold;
+        }
+
+        .status.withheld {
+            color: orange;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zan Academy</h1>
+        <h2>Student Results Portal</h2>
+        <form onsubmit="event.preventDefault(); checkResult();">
+            <div class="form-group">
+                <label for="registrationNumber">Registration Number</label>
+                <input type="text" id="registrationNumber" placeholder="Enter Registration Number" required>
+            </div>
+            <div class="form-group">
+                <label for="dob">Date of Birth (DD/MM/YYYY)</label>
+                <input type="text" id="dob" placeholder="Enter Date of Birth" required>
+            </div>
+            <button type="submit" class="btn">Check Result</button>
+        </form>
+        <div id="alert" class="alert"></div>
+    </div>
+
+    <!-- Modal for displaying results -->
+    <div class="modal" id="resultModal">
+        <div class="modal-header">Student Exam Results</div>
+        <table>
+            <tr>
+                <th>Name</th>
+                <td id="name"></td>
+            </tr>
+            <tr>
+                <th>Date of Birth</th>
+                <td id="dobResult"></td>
+            </tr>
+            <tr>
+                <th>Registration Number</th>
+                <td id="regNumberResult"></td>
+            </tr>
+            <tr>
+                <th>Course</th>
+                <td id="course"></td>
+            </tr>
+        </table>
+        <h2>Exam Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Exam Component</th>
+                    <th>Score</th>
+                    <th>Max Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Written</td>
+                    <td id="written"></td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td>Practical</td>
+                    <td id="practical"></td>
+                    <td>20</td>
+                </tr>
+                <tr>
+                    <td>Interview</td>
+                    <td id="interview"></td>
+                    <td>20</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2>Summary</h2>
+        <table>
+            <tr>
+                <th>Total Score</th>
+                <td id="totalScore"></td>
+            </tr>
+            <tr>
+                <th>Result</th>
+                <td id="resultStatus"></td>
+            </tr>
+        </table>
+        <div class="modal-footer">
+            <button class="btn-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const studentData = [
+    {
+        "name": "ABHIRAM K",
+        "dob": "05/08/2004",
+        "registrationNumber": "ZAIDS22001",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 34,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 36,
+        "result": "FAILED"
+    },
+    {
+        "name": "ARCHANA A P",
+        "dob": "07/01/2005",
+        "registrationNumber": "ZAIDS22002",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 57,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 59,
+        "result": "PASS"
+    },
+    {
+        "name": "BINSHI MOL",
+        "dob": "23/11/2004",
+        "registrationNumber": "ZAIDS22003",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 42,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 44,
+        "result": "FAILED"
+    },
+    {
+        "name": "JYOTHISHA S",
+        "dob": "05/08/2004",
+        "registrationNumber": "ZAIDS22004",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 42,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 44,
+        "result": "FAILED"
+    },
+    {
+        "name": "MOHAMMED THANSIF T",
+        "dob": "02/09/2003",
+        "registrationNumber": "ZAIDS22005",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 39,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 41,
+        "result": "FAILED"
+    },
+    {
+        "name": "NEETHU N",
+        "dob": "07/05/2004",
+        "registrationNumber": "ZAIDS22006",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 24,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 26,
+        "result": "FAILED"
+    },
+    {
+        "name": "RINSHA NASRIN B",
+        "dob": "12/07/2003",
+        "registrationNumber": "ZAIDS22007",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 17,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 19,
+        "result": "FAILED"
+    },
+    {
+        "name": "SREERAG K",
+        "dob": "18/03/2005",
+        "registrationNumber": "ZAIDS22008",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 24,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 26,
+        "result": "FAILED"
+    },
+    {
+        "name": "SREERAM K",
+        "dob": "02/08/2004",
+        "registrationNumber": "ZAIDS22009",
+        "course": "Artificial Intelligence Data Science (AIDS)",
+        "written": 28,
+        "practical": 2,
+        "interview": 0,
+        "totalScore": 30,
+        "result": "FAILED"
+    },
+    {
+        "name": "ADHIL MUHAMMED P R",
+        "dob": "08/04/2004",
+        "registrationNumber": "ZAI21001",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "AFIFA MOL B",
+        "dob": "29/06/2003",
+        "registrationNumber": "ZAI21002",
+        "course": "Artificial Intelligence",
+        "written": 13,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 23,
+        "result": "FAILED"
+    },
+    {
+        "name": "AJAY A",
+        "dob": "15/08/2003",
+        "registrationNumber": "ZAI21003",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "AJMAL K Z",
+        "dob": "07/05/2002",
+        "registrationNumber": "ZAI21004",
+        "course": "Artificial Intelligence",
+        "written": 54,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 68,
+        "result": "PASS"
+    },
+    {
+        "name": "AKHIL P G",
+        "dob": "05/05/2000",
+        "registrationNumber": "ZAI21005",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "AMRUTHA V",
+        "dob": "04/11/2003",
+        "registrationNumber": "ZAI21006",
+        "course": "Artificial Intelligence",
+        "written": 33,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 43,
+        "result": "FAILED"
+    },
+    {
+        "name": "ANANTHAKRISHNAN P",
+        "dob": "27/08/2002",
+        "registrationNumber": "ZAI21007",
+        "course": "Artificial Intelligence",
+        "written": 39,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 49,
+        "result": "FAILED"
+    },
+    {
+        "name": "ANAZ N A",
+        "dob": "08/10/2003",
+        "registrationNumber": "ZAI21008",
+        "course": "Artificial Intelligence",
+        "written": 44,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 54,
+        "result": "FAILED"
+    },
+    {
+        "name": "ARUN M G",
+        "dob": "10/08/2004",
+        "registrationNumber": "ZAI21009",
+        "course": "Artificial Intelligence",
+        "written": 45,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 59,
+        "result": "PASS"
+    },
+    {
+        "name": "ASWIN K S",
+        "dob": "05/05/2000",
+        "registrationNumber": "ZAI21010",
+        "course": "Artificial Intelligence",
+        "written": 51,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 65,
+        "result": "PASS"
+    },
+    {
+        "name": "DIYOOF RAHMAN P",
+        "dob": "26/03/2003",
+        "registrationNumber": "ZAI21011",
+        "course": "Artificial Intelligence",
+        "written": 42,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 56,
+        "result": "PASS"
+    },
+    {
+        "name": "FARIZ O K",
+        "dob": "15/02/2003",
+        "registrationNumber": "ZAI21012",
+        "course": "Artificial Intelligence",
+        "written": 39,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 53,
+        "result": "FAILED"
+    },
+    {
+        "name": "HARI HARAN S",
+        "dob": "24/10/2003",
+        "registrationNumber": "ZAI21013",
+        "course": "Artificial Intelligence",
+        "written": 55,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 67,
+        "result": "PASS"
+    },
+    {
+        "name": "HARIPRASAD R",
+        "dob": "26/06/2004",
+        "registrationNumber": "ZAI21014",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "HASSAN HUDA",
+        "dob": "14/03/2003",
+        "registrationNumber": "ZAI21015",
+        "course": "Artificial Intelligence",
+        "written": 45,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 57,
+        "result": "PASS"
+    },
+    {
+        "name": "HYNE P",
+        "dob": "24/03/2003",
+        "registrationNumber": "ZAI21016",
+        "course": "Artificial Intelligence",
+        "written": 48,
+        "practical": 10,
+        "interview": 3,
+        "totalScore": 61,
+        "result": "PASS"
+    },
+    {
+        "name": "JUNAID PP",
+        "dob": "28/04/2004",
+        "registrationNumber": "ZAI21017",
+        "course": "Artificial Intelligence",
+        "written": 50,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 60,
+        "result": "PASS"
+    },
+    {
+        "name": "MANEESH EM",
+        "dob": "08/01/2004",
+        "registrationNumber": "ZAI21018",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "MANIKANDAN M",
+        "dob": "02/07/2003",
+        "registrationNumber": "ZAI21019",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "MOHAMMED SHABEER K C",
+        "dob": "09/08/2003",
+        "registrationNumber": "ZAI21020",
+        "course": "Artificial Intelligence",
+        "written": 52,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 64,
+        "result": "PASS"
+    },
+    {
+        "name": "MUHAMMED AFSAL M M",
+        "dob": "17/04/2004",
+        "registrationNumber": "ZAI21021",
+        "course": "Artificial Intelligence",
+        "written": 0,
+        "practical": 0,
+        "interview": 0,
+        "totalScore": 0,
+        "result": "WITHHELD"
+    },
+    {
+        "name": "MUHAMMED MUFEED V",
+        "dob": "08/11/2002",
+        "registrationNumber": "ZAI21022",
+        "course": "Artificial Intelligence",
+        "written": 38,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 50,
+        "result": "FAILED"
+    },
+    {
+        "name": "MUHAMMED NISHAM O N",
+        "dob": "16/03/2003",
+        "registrationNumber": "ZAI21023",
+        "course": "Artificial Intelligence",
+        "written": 62,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 74,
+        "result": "PASS"
+    },
+    {
+        "name": "PADMANABHAN A K",
+        "dob": "15/01/2003",
+        "registrationNumber": "ZAI21024",
+        "course": "Artificial Intelligence",
+        "written": 45,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 55,
+        "result": "FAILED"
+    },
+    {
+        "name": "PRAVEEN K",
+        "dob": "30/01/2003",
+        "registrationNumber": "ZAI21025",
+        "course": "Artificial Intelligence",
+        "written": 47,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 59,
+        "result": "PASS"
+    },
+    {
+        "name": "R HARIPRASAD",
+        "dob": "13/03/2002",
+        "registrationNumber": "ZAI21026",
+        "course": "Artificial Intelligence",
+        "written": 52,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 62,
+        "result": "PASS"
+    },
+    {
+        "name": "S HARILAL",
+        "dob": "28/11/2003",
+        "registrationNumber": "ZAI21027",
+        "course": "Artificial Intelligence",
+        "written": 43,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 53,
+        "result": "FAILED"
+    },
+    {
+        "name": "SAHAJ K R",
+        "dob": "14/04/2003",
+        "registrationNumber": "ZAI21028",
+        "course": "Artificial Intelligence",
+        "written": 47,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 57,
+        "result": "FAILED"
+    },
+    {
+        "name": "SARATH K",
+        "dob": "17/07/2002",
+        "registrationNumber": "ZAI21029",
+        "course": "Artificial Intelligence",
+        "written": 50,
+        "practical": 10,
+        "interview": 2,
+        "totalScore": 62,
+        "result": "PASS"
+    },
+    {
+        "name": "SREERAG G",
+        "dob": "25/02/2003",
+        "registrationNumber": "ZAI21030",
+        "course": "Artificial Intelligence",
+        "written": 54,
+        "practical": 10,
+        "interview": 4,
+        "totalScore": 68,
+        "result": "PASS"
+    },
+    {
+        "name": "VINAY MADHAV T V",
+        "dob": "18/06/2003",
+        "registrationNumber": "ZAI21031",
+        "course": "Artificial Intelligence",
+        "written": 43,
+        "practical": 10,
+        "interview": 0,
+        "totalScore": 53,
+        "result": "FAILED"
+    },
+    {
+        "name": "VISHNUDEV P",
+        "dob": "03/04/2003",
+        "registrationNumber": "ZAI21032",
+        "course": "Artificial Intelligence",
+        "written": 63,
+        "practical": 10,
+        "interview": 8,
+        "totalScore": 81,
+        "result": "PASS"
+    }
+];
+
+        function checkResult() {
+            const regNo = document.getElementById("registrationNumber").value.trim();
+            const dob = document.getElementById("dob").value.trim();
+            const alertDiv = document.getElementById("alert");
+            const resultModal = document.getElementById("resultModal");
+
+            // Clear alerts and hide modal
+            alertDiv.textContent = "";
+            resultModal.classList.remove("active");
+
+            // Find student
+            const student = studentData.find(s => s.registrationNumber === regNo && s.dob === dob);
+
+            if (student) {
+                // Populate results
+                document.getElementById("name").textContent = student.name;
+                document.getElementById("dobResult").textContent = student.dob;
+                document.getElementById("regNumberResult").textContent = student.registrationNumber;
+                document.getElementById("course").textContent = student.course;
+                document.getElementById("written").textContent = student.written;
+                document.getElementById("practical").textContent = student.practical;
+                document.getElementById("interview").textContent = student.interview;
+                document.getElementById("totalScore").textContent = student.totalScore;
+                document.getElementById("resultStatus").innerHTML = `<span class="status ${student.result.toLowerCase()}">${student.result}</span>`;
+
+                // Show modal
+                resultModal.classList.add("active");
+            } else {
+                // Show alert
+                alertDiv.textContent = "Result not available for the provided details.";
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("resultModal").classList.remove("active");
+        }
+    </script>
+</body>
+</html>
